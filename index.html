@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Análise de sistemas de bombeamento</title>
+  <meta name="description" content="Ferramenta de cálculo de perdas de carga, altura manométrica, potência da bomba, NPSH e ponto de operação.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-in">
+    <div>
+      <h1>Análise de sistemas de bombeamento</h1>
+      <p>Perdas de carga, altura manométrica, potência requerida, cavitação (NPSH) e ponto de operação da bomba.</p>
+    </div>
+    <div class="presets" role="group" aria-label="Exemplos prontos">
+      <button type="button" data-preset="validacao">Caso de validação (água)</button>
+      <button type="button" data-preset="oleo">Exemplo com óleo viscoso</button>
+      <button type="button" data-preset="quente">Água quente (cavitação)</button>
+    </div>
+  </div>
+</header>
+
+<main class="grade">
+
+  <form id="entrada" class="folha" autocomplete="off" onsubmit="return false">
+
+    <fieldset>
+      <legend>Fluido</legend>
+      <label>Fluido
+        <select id="fluid"></select>
+      </label>
+      <div id="fluid-std">
+        <label>Temperatura
+          <span class="campo"><input id="temp" type="number" step="any" inputmode="decimal"><span class="un">°C</span></span>
+        </label>
+      </div>
+      <div id="fluid-custom" class="escondido">
+        <div class="linha2">
+          <label>Massa específica ρ
+            <span class="campo"><input id="c-rho" type="number" step="any" inputmode="decimal" value="1000"><span class="un">kg/m³</span></span>
+          </label>
+          <label>Viscosidade μ
+            <span class="campo"><input id="c-mu" type="number" step="any" inputmode="decimal" value="1"><span class="un">mPa·s</span></span>
+          </label>
+        </div>
+        <label>Pressão de vapor Pv (absoluta)
+          <span class="campo"><input id="c-pv" type="number" step="any" inputmode="decimal" value="2.34"><span class="un">kPa</span></span>
+        </label>
+      </div>
+      <div class="propriedades" id="fluid-info" aria-live="polite"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Vazão e local</legend>
+      <label>Vazão de projeto
+        <span class="campo">
+          <input id="q" type="number" step="any" inputmode="decimal" min="0">
+          <select id="qunit" aria-label="Unidade de vazão">
+            <option value="m3h">m³/h</option>
+            <option value="ls">L/s</option>
+            <option value="m3s">m³/s</option>
+            <option value="gpm">gpm (EUA)</option>
+          </select>
+        </span>
+      </label>
+      <label>Altitude do local (define a pressão atmosférica)
+        <span class="campo"><input id="alt" type="number" step="any" inputmode="decimal"><span class="un">m</span></span>
+      </label>
+    </fieldset>
+
+    <div id="bloco-s"></div>
+    <div id="bloco-d"></div>
+
+    <fieldset>
+      <legend>Desníveis e pressões</legend>
+      <p class="ajuda">Alturas medidas em relação ao eixo da bomba: positivo = acima, negativo = abaixo.</p>
+      <label>Nível do líquido na sucção
+        <span class="campo"><input id="z1" type="number" step="any" inputmode="decimal"><span class="un">m</span></span>
+      </label>
+      <label>Cota do ponto de descarga (saída da tubulação)
+        <span class="campo"><input id="z2" type="number" step="any" inputmode="decimal"><span class="un">m</span></span>
+      </label>
+      <div class="linha2">
+        <label>Pressão sobre o líquido na sucção
+          <span class="campo"><input id="p1" type="number" step="any" inputmode="decimal"><span class="un">kPa man.</span></span>
+        </label>
+        <label>Pressão no ponto de descarga
+          <span class="campo"><input id="p2" type="number" step="any" inputmode="decimal"><span class="un">kPa man.</span></span>
+        </label>
+      </div>
+      <p class="ajuda">Reservatório aberto à atmosfera = 0 kPa manométrico.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Bomba e motor</legend>
+      <div class="linha2">
+        <label>Rendimento da bomba
+          <span class="campo"><input id="eta-p" type="number" step="any" inputmode="decimal"><span class="un">%</span></span>
+        </label>
+        <label>Rendimento do motor
+          <span class="campo"><input id="eta-m" type="number" step="any" inputmode="decimal"><span class="un">%</span></span>
+        </label>
+      </div>
+      <div class="linha2">
+        <label>NPSHr (se não houver curva)
+          <span class="campo"><input id="npshr" type="number" step="any" inputmode="decimal"><span class="un">m</span></span>
+        </label>
+        <label>Folga exigida NPSHd/NPSHr
+          <span class="campo"><input id="margem" type="number" step="any" inputmode="decimal"><span class="un">×</span></span>
+        </label>
+      </div>
+      <h3 style="margin:14px 0 2px;font-size:1.05rem">Curva da bomba (folha do fabricante)</h3>
+      <p class="ajuda">Preencha ao menos 3 pontos de Q e H para obter o ponto de operação. Rendimento e NPSHr são opcionais.</p>
+      <table class="curva">
+        <thead><tr><th>Q (m³/h)</th><th>H (m)</th><th>η (%)</th><th>NPSHr (m)</th><th></th></tr></thead>
+        <tbody id="curva-corpo"></tbody>
+      </table>
+      <button type="button" class="botao-fino" id="add-ponto">+ Adicionar ponto</button>
+    </fieldset>
+
+  </form>
+
+  <section id="resultados" class="folha" aria-live="polite" aria-label="Resultados"></section>
+</main>
+
+<section class="memoria">
+  <details id="memoria-det">
+    <summary><span>Memória de cálculo <small>passo a passo, com os valores da simulação atual</small></span></summary>
+    <div id="memoria-corpo"></div>
+  </details>
+</section>
+
+<footer class="rodape">
+  <p><strong>Modelo.</strong> Escoamento permanente e incompressível entre dois reservatórios de nível constante. Perdas distribuídas por Darcy-Weisbach com fator de atrito de Colebrook-White; perdas localizadas pelo método K (Crane TP-410). Ferramenta didática: confira sempre os resultados com a folha de dados do fabricante antes de qualquer uso real.</p>
+  <p><strong>Validação.</strong> O caso de validação (botão no topo) foi conferido contra um cálculo manual independente e contra 65 testes automáticos (pasta <code>tests/</code>).</p>
+</footer>
+
+<a class="resumo-fixo" id="resumo-fixo" href="#resultados" aria-label="Ir para os resultados"></a>
+
+<script src="js/fluids.js"></script>
+<script src="js/fittings.js"></script>
+<script src="js/hydraulics.js"></script>
+<script src="js/pump.js"></script>
+<script src="js/analysis.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/memoria.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
