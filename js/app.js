@@ -27,6 +27,22 @@
       s: { dn: '2 1/2"', d: 62.71, l: 3, mat: 'aco', eps: 0.045, fit: [['entrada-viva', 1], ['cotovelo90', 1]] },
       d: { dn: '2"', d: 52.5, l: 60, mat: 'aco', eps: 0.045, fit: [['cotovelo90', 3], ['gaveta', 1], ['saida', 1]] },
       curva: []
+    },
+    // Desafio: salmoura em unidade industrial em região de altitude (Patm local = 88,0 kPa abs,
+    // equivalente a ~1173 m pela atmosfera padrão ISA — o mesmo modelo usado pelo campo Altitude).
+    salmoura: {
+      fluid: 'custom', cRho: 1070, cMu: 1.20, cPv: 2.1,
+      q: 50, alt: 1173.43, z1: -0.5, z2: 35.0, p1: 0, p2: 0, etaP: 74, etaM: 92, npshr: 5.6, margem: 1.3,
+      opHoras: 22, opDias: 28, opTarifa: 0.79, compareLowered: true,
+      s: {
+        dn: '', d: 100, l: 25, mat: 'aco', eps: 0.045,
+        fit: [['kc', 1, 0.50], ['kc', 3, 0.90], ['kc', 1, 0.15], ['kc', 1, 2.00]]
+      },
+      d: {
+        dn: '', d: 90, l: 140, mat: 'aco', eps: 0.045,
+        fit: [['kc', 8, 0.90], ['kc', 2, 0.15], ['kc', 1, 2.00], ['kc', 1, 10.00], ['kc', 1, 1.00]]
+      },
+      curva: []
     }
   };
 
@@ -135,7 +151,9 @@
     return {
       errors, inp: {
         fluid, T, alt, patm: B.hyd.atmPressure(alt), suction, discharge, z1, z2, p1: p1 * 1000, p2: p2 * 1000, Q,
-        etaPump, etaMotor, npshrFixed: num('npshr'), npshMargin: Math.max(1, num('margem') || 1.3), pumpRows
+        etaPump, etaMotor, npshrFixed: num('npshr'), npshMargin: Math.max(1, num('margem') || 1.3), pumpRows,
+        opHoras: num('op-horas'), opDias: num('op-dias'), opTarifa: num('op-tarifa'),
+        compareLowered: $('cmp-rebaixo').checked
       }
     };
   }
@@ -218,8 +236,40 @@
         ${row1('Viscosidade dinâmica μ · cinemática ν', `${nf(f.mu * 1000, 4)} mPa·s · ${nf(f.nu * 1e6, 3)} cSt`)}
         ${row1('Pressão de vapor Pv (abs.)', `${nf(f.pv / 1000, 3)} kPa`)}
         ${row1('Pressão atmosférica local', `${nf(inp.patm / 1000, 2)} kPa`)}
-      </tbody></table></div>`;
+      </tbody></table>` + renderEnergy(inp, d) + `</div>`;
     return h;
+  }
+
+  function renderEnergy(inp, d) {
+    const { opHoras: hd, opDias: dm, opTarifa: tar } = inp;
+    if (![hd, dm, tar].every((v) => Number.isFinite(v) && v > 0)) return '';
+    const kWh = (d.Pelec / 1000) * hd * dm;
+    const custo = kWh * tar;
+    const row1 = (rot, a) => `<tr><td>${rot}</td><td>${a}</td></tr>`;
+    return `<h3>Consumo de energia estimado</h3>
+      <table class="dados"><tbody>
+        ${row1('Regime de operação', `${nf(hd, 1)} h/dia × ${nf(dm, 0)} dias/mês`)}
+        ${row1('Potência elétrica', `${nf(d.Pelec / 1000, 3)} kW`)}
+        ${row1('Consumo mensal', `${nf(kWh, 0)} kWh`)}
+        ${row1('Custo mensal (tarifa ' + nf(tar, 2) + ' R$/kWh)', `R$ ${nf(custo, 2)}`)}
+      </tbody></table>`;
+  }
+
+  function renderCompare(r1, r2) {
+    const d1 = r1.dsg, d2 = r2.dsg;
+    const row = (rot, v1, v2) => `<tr><td>${rot}</td><td>${nf(v1, 3)}</td><td>${nf(v2, 3)}</td><td>${v2 - v1 >= 0 ? '+' : ''}${nf(v2 - v1, 3)}</td></tr>`;
+    return `<section class="comparacao"><h2>Condição adicional: bomba rebaixada 1 m</h2>
+      <p>Mesmos níveis físicos dos reservatórios; a bomba (referência de cotas) desce 1 m. Isso desloca z₁ e z₂ em +1 m cada, na mesma proporção — como H = (z₂ − z₁) + (p₂ − p₁)/ρg + perdas, e a diferença (z₂ − z₁) não muda, a <b>altura manométrica total permanece igual</b> pelo balanço de Bernoulli entre as duas superfícies. O que muda é a distribuição de energia ao longo do caminho: a sucção fica com mais carga disponível (menos desnível negativo), então o <b>NPSH disponível aumenta</b> exatamente 1 m.</p>
+      <table class="dados"><thead><tr><th></th><th>Condição base</th><th>Rebaixada 1 m</th><th>Δ</th></tr></thead><tbody>` +
+      row('Perda total na sucção (m)', d1.S.hL, d2.S.hL) +
+      row('Perda total no recalque (m)', d1.R.hL, d2.R.hL) +
+      row('Altura manométrica H (m)', d1.H, d2.H) +
+      row('Potência no eixo (kW)', d1.Pshaft / 1000, d2.Pshaft / 1000) +
+      row('Potência elétrica (kW)', d1.Pelec / 1000, d2.Pelec / 1000) +
+      row('NPSH disponível (m)', d1.npsh.npshd, d2.npsh.npshd) +
+      row('NPSH requerido (m)', d1.npshr, d2.npshr) +
+      row('Margem de NPSH (m)', d1.cav.margin, d2.cav.margin) +
+      `</tbody></table></section>`;
   }
 
   function updateFixed(r) {
@@ -261,7 +311,12 @@
     }
     try {
       const r = B.analysis.analyze(inp);
-      $('resultados').innerHTML = renderResults(r);
+      let html = renderResults(r);
+      if (inp.compareLowered) {
+        const r2 = B.analysis.analyze({ ...inp, z1: inp.z1 + 1, z2: inp.z2 + 1 });
+        html = renderCompare(r, r2) + html;
+      }
+      $('resultados').innerHTML = html;
       $('memoria-corpo').innerHTML = B.memoria.build(r);
       updateFixed(r);
     } catch (e) {
@@ -273,6 +328,7 @@
   function applyPreset(name) {
     const p = PRESETS[name];
     $('fluid').value = p.fluid; $('temp').value = p.T ?? '';
+    if (p.fluid === 'custom') { $('c-rho').value = p.cRho; $('c-mu').value = p.cMu; $('c-pv').value = p.cPv; }
     $('q').value = p.q; $('qunit').value = 'm3h'; $('qunit').dataset.prev = 'm3h';
     $('alt').value = p.alt;
     for (const x of ['s', 'd']) {
@@ -284,6 +340,8 @@
     }
     ['z1', 'z2', 'p1', 'p2'].forEach((k) => ($(k).value = p[k]));
     $('eta-p').value = p.etaP; $('eta-m').value = p.etaM; $('npshr').value = p.npshr; $('margem').value = p.margem;
+    $('op-horas').value = p.opHoras ?? ''; $('op-dias').value = p.opDias ?? ''; $('op-tarifa').value = p.opTarifa ?? '';
+    $('cmp-rebaixo').checked = !!p.compareLowered;
     $('curva-corpo').innerHTML = '';
     p.curva.forEach((v) => addPumpRow(v));
     for (let i = p.curva.length; i < 4; i++) addPumpRow();

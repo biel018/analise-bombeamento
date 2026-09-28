@@ -77,6 +77,15 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 .campo select { margin: 0; width: auto; border-radius: 0 2px 2px 0; background: #EAF1F3; }
 .linha2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 .escondido { display: none !important; }
+.chk { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; font-size: .88rem; }
+.chk input { width: auto; height: auto; margin: 0; }
+
+/* ---------- comparação de cenários ---------- */
+.comparacao { margin: 0 24px 22px; padding: 14px 18px; background: var(--agua-clara); border-left: 4px solid var(--agua); }
+.comparacao h2 { margin: 0 0 8px; font-size: 1.3rem; }
+.comparacao table.dados { background: var(--folha); }
+.comparacao table.dados th, .comparacao table.dados td { padding: 6px 10px; }
+.comparacao p { margin: 10px 0 0; font-size: .92rem; color: var(--tinta); }
 
 .propriedades {
   margin: 4px 0 12px; padding: 8px 12px; background: var(--agua-clara); color: var(--tinta);
@@ -203,6 +212,7 @@ table.dados tr.total td { font-weight: 700; border-top: 2px solid var(--tinta); 
   .bloco-res, .status { padding-left: 14px; padding-right: 14px; }
   .numeros { margin-left: 14px; margin-right: 14px; }
   #entrada { padding: 4px 14px 22px; }
+  .comparacao { margin-left: 14px; margin-right: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 @media print {

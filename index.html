@@ -27,6 +27,7 @@
       <button type="button" data-preset="validacao">Caso de validação (água)</button>
       <button type="button" data-preset="oleo">Exemplo com óleo viscoso</button>
       <button type="button" data-preset="quente">Água quente (cavitação)</button>
+      <button type="button" data-preset="salmoura">Salmoura em altitude (desafio)</button>
     </div>
   </div>
 </header>
@@ -120,6 +121,7 @@
           <span class="campo"><input id="margem" type="number" step="any" inputmode="decimal"><span class="un">×</span></span>
         </label>
       </div>
+      <label class="chk"><input type="checkbox" id="cmp-rebaixo"> Comparar com a bomba rebaixada 1 m (mesmos níveis físicos dos reservatórios)</label>
       <h3 style="margin:14px 0 2px;font-size:1.05rem">Curva da bomba (folha do fabricante)</h3>
       <p class="ajuda">Preencha ao menos 3 pontos de Q e H para obter o ponto de operação. Rendimento e NPSHr são opcionais.</p>
       <table class="curva">
@@ -127,6 +129,22 @@
         <tbody id="curva-corpo"></tbody>
       </table>
       <button type="button" class="botao-fino" id="add-ponto">+ Adicionar ponto</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Consumo de energia (opcional)</legend>
+      <p class="ajuda">Preencha para estimar o consumo e o custo mensal de energia desta bomba.</p>
+      <div class="linha2">
+        <label>Regime de operação
+          <span class="campo"><input id="op-horas" type="number" step="any" inputmode="decimal" min="0" max="24"><span class="un">h/dia</span></span>
+        </label>
+        <label>Dias de operação
+          <span class="campo"><input id="op-dias" type="number" step="any" inputmode="decimal" min="0" max="31"><span class="un">dias/mês</span></span>
+        </label>
+      </div>
+      <label>Tarifa de energia
+        <span class="campo"><input id="op-tarifa" type="number" step="any" inputmode="decimal" min="0"><span class="un">R$/kWh</span></span>
+      </label>
     </fieldset>
 
   </form>
