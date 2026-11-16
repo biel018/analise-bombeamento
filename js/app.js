@@ -305,7 +305,7 @@
   /*  Atualização                                                        */
   /* ------------------------------------------------------------------ */
   let timer = null;
-  function schedule() { clearTimeout(timer); timer = setTimeout(update, 60); }
+  function schedule() { clearTimeout(timer); timer = setTimeout(update, 60); salvar(); }
 
   function update() {
     updateFluidInfo();
@@ -331,7 +331,7 @@
     }
   }
 
-  function applyPreset(name) {
+  function fillPreset(name) {
     const p = PRESETS[name];
     $('fluid').value = p.fluid; $('temp').value = p.T ?? '';
     if (p.fluid === 'custom') { $('c-rho').value = p.cRho; $('c-mu').value = p.cMu; $('c-pv').value = p.cPv; }
@@ -351,7 +351,67 @@
     $('curva-corpo').innerHTML = '';
     p.curva.forEach((v) => addPumpRow(v));
     for (let i = p.curva.length; i < 4; i++) addPumpRow();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Memória por aba: cada aba guarda os dados digitados no navegador   */
+  /* ------------------------------------------------------------------ */
+  let abaAtual = 'validacao';
+  const CHAVE = (n) => 'bomb:v1:' + n;
+  const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* sem armazenamento */ } };
+  const ler = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+  function tirarFoto() {
+    const campos = {};
+    $('entrada').querySelectorAll('input[id], select[id]').forEach((el) => { campos[el.id] = el.type === 'checkbox' ? el.checked : el.value; });
+    const fit = {};
+    for (const x of ['s', 'd']) {
+      fit[x] = [...$(x + '-fit').children].map((r) => [r.querySelector('select').value, r.querySelector('.peca-qtd').value, r.querySelector('.peca-k').value]);
+    }
+    const curva = [...$('curva-corpo').children].map((tr) => [...tr.querySelectorAll('input')].map((i) => i.value));
+    return { campos, fit, curva, prev: $('qunit').dataset.prev };
+  }
+
+  function salvar() { guardar(CHAVE(abaAtual), JSON.stringify(tirarFoto())); }
+
+  function restaurar(f) {
+    // o select de fluido precisa vir antes (as opções já existem desde o init)
+    for (const [id, v] of Object.entries(f.campos)) {
+      const el = $(id); if (!el) continue;
+      if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+    }
+    $('qunit').dataset.prev = f.prev || $('qunit').value;
+    for (const x of ['s', 'd']) {
+      $(x + '-fit').innerHTML = '';
+      (f.fit[x] || []).forEach((r) => addFitting(x, r[0], r[1], r[2]));
+    }
+    $('curva-corpo').innerHTML = '';
+    f.curva.forEach((v) => addPumpRow(v));
+    for (let i = f.curva.length; i < 4; i++) addPumpRow();
+  }
+
+  function marcarAba() {
+    document.querySelectorAll('[data-preset]').forEach((b) => b.classList.toggle('ativa', b.dataset.preset === abaAtual));
+    $('btn-restaurar').classList.toggle('escondido', abaAtual === 'limpo');
+  }
+
+  function abrirAba(name) {
+    abaAtual = name;
+    guardar('bomb:v1:atual', name);
+    let ok = false;
+    try { const raw = ler(CHAVE(name)); if (raw) { restaurar(JSON.parse(raw)); ok = true; } } catch (e) { ok = false; }
+    if (!ok) fillPreset(name);
+    marcarAba();
     update();
+  }
+
+  function limparAba() {
+    if (!confirm('Limpar todos os dados desta aba?')) return;
+    fillPreset('limpo'); salvar(); update();
+  }
+  function restaurarExemplo() {
+    if (!confirm('Voltar esta aba aos valores originais do exemplo? Os dados digitados serão perdidos.')) return;
+    fillPreset(abaAtual); salvar(); update();
   }
 
   /* ------------------------------------------------------------------ */
@@ -396,9 +456,12 @@
       if (x) { (x.closest('.peca') || x.closest('tr')).remove(); schedule(); }
     });
     $('qunit').dataset.prev = 'm3h';
-    document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => { applyPreset(b.dataset.preset); window.scrollTo({ top: 0 }); }));
+    document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => { abrirAba(b.dataset.preset); window.scrollTo({ top: 0 }); }));
+    $('btn-limpar').addEventListener('click', limparAba);
+    $('btn-restaurar').addEventListener('click', restaurarExemplo);
 
-    applyPreset('validacao');
+    const ultima = ler('bomb:v1:atual');
+    abrirAba(ultima && PRESETS[ultima] ? ultima : 'validacao');
   }
   document.addEventListener('DOMContentLoaded', init);
 })();

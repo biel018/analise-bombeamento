@@ -220,3 +220,10 @@ table.dados tr.total td { font-weight: 700; border-top: 2px solid var(--tinta); 
   .grade { display: block; padding: 0; } body { background: #fff; }
   .memoria details { border: 0; } .memoria details:not([open]) > *:not(summary) { display: block; }
 }
+
+/* abas com memória */
+.presets button.ativa { background: #F58A1F; border-color: #F58A1F; color: #12303A; }
+.acoes-aba { display: flex; gap: 8px; width: 100%; margin-top: 2px; }
+.acoes-aba .botao-fino { margin: 0; }
+.presets .acoes-aba button { background: transparent; border: 1px dashed rgba(255,255,255,.5); color: #fff; }
+.presets .acoes-aba button:hover { background: #21454F; }
