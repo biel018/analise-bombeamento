@@ -49,6 +49,15 @@
         fit: [['kc', 8, 0.90], ['kc', 2, 0.15], ['kc', 1, 2.00], ['kc', 1, 10.00], ['kc', 1, 1.00]]
       },
       curva: []
+    },
+    // Estudo de caso: envase de sabão líquido para as mãos (ρ = 1023 kg/m³, pH 7,5;
+    // Copo Ford nº2 = 50 s → ν = 1,44·(t-18) = 46,08 cSt, conforme NBR 5849).
+    sabao: {
+      fluid: 'custom', cRho: 1023, cMu: 47.135, cPv: 2.34,
+      q: 1, alt: 0, z1: 0.5, z2: 3, p1: 0, p2: 0, etaP: 50, etaM: 90, npshr: '', margem: 1.3,
+      s: { dn: '', d: 25, l: 1.5, mat: 'pvc', eps: 0.0015, fit: [['entrada-viva', 1], ['esfera', 1]] },
+      d: { dn: '', d: 25, l: 10, mat: 'pvc', eps: 0.0015, fit: [['esfera', 2], ['cotovelo90', 2], ['saida', 1]] },
+      curva: []
     }
   };
 
