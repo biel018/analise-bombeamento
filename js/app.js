@@ -19,7 +19,13 @@
     d: { dn: '2 1/2"', d: 62.71, l: 45, mat: 'aco', eps: 0.045, fit: [['cotovelo90', 4], ['gaveta', 1], ['retencao', 1], ['saida', 1]] },
     curva: CURVA_EXEMPLO
   };
+  const LINHA_VAZIA = { dn: '', d: '', l: '', mat: 'custom', eps: '', fit: [] };
   const PRESETS = {
+    // Aba limpa: todos os campos vazios, para digitar os dados do seu caso
+    limpo: {
+      fluid: 'agua', T: '', q: '', alt: '', z1: '', z2: '', p1: '', p2: '', etaP: '', etaM: '', npshr: '', margem: '',
+      s: LINHA_VAZIA, d: LINHA_VAZIA, curva: []
+    },
     validacao: { ...INSTALACAO_AGUA, fluid: 'agua', T: 20 },
     quente: { ...INSTALACAO_AGUA, fluid: 'agua', T: 90 },
     oleo: {
