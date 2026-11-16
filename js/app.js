@@ -392,7 +392,11 @@
 
   function marcarAba() {
     document.querySelectorAll('[data-preset]').forEach((b) => b.classList.toggle('ativa', b.dataset.preset === abaAtual));
-    $('btn-restaurar').classList.toggle('escondido', abaAtual === 'limpo');
+    const novo = abaAtual === 'limpo';
+    $('btn-restaurar').classList.toggle('escondido', novo);
+    $('btn-limpar').classList.toggle('escondido', !novo);
+    $('btn-salvar').classList.toggle('escondido', !novo);
+    $('aviso-salvo').textContent = novo ? 'Os dados também são salvos automaticamente.' : '';
   }
 
   function abrirAba(name) {
@@ -405,9 +409,14 @@
     update();
   }
 
+  function salvarManual() {
+    salvar();
+    const a = $('aviso-salvo'); a.textContent = '✓ Salvo às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
   function limparAba() {
     if (!confirm('Limpar todos os dados desta aba?')) return;
     fillPreset('limpo'); salvar(); update();
+    $('aviso-salvo').textContent = 'Aba limpa.';
   }
   function restaurarExemplo() {
     if (!confirm('Voltar esta aba aos valores originais do exemplo? Os dados digitados serão perdidos.')) return;
@@ -458,6 +467,7 @@
     $('qunit').dataset.prev = 'm3h';
     document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => { abrirAba(b.dataset.preset); window.scrollTo({ top: 0 }); }));
     $('btn-limpar').addEventListener('click', limparAba);
+    $('btn-salvar').addEventListener('click', salvarManual);
     $('btn-restaurar').addEventListener('click', restaurarExemplo);
 
     const ultima = ler('bomb:v1:atual');

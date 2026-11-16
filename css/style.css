@@ -227,3 +227,5 @@ table.dados tr.total td { font-weight: 700; border-top: 2px solid var(--tinta); 
 .acoes-aba .botao-fino { margin: 0; }
 .presets .acoes-aba button { background: transparent; border: 1px dashed rgba(255,255,255,.5); color: #fff; }
 .presets .acoes-aba button:hover { background: #21454F; }
+.aviso-salvo { color: #C9DADF; font-size: .85rem; align-self: center; }
+.acoes-aba .escondido { display: none; }
